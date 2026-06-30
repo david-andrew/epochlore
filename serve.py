@@ -37,7 +37,7 @@ CONTENT_TYPES = {
 }
 
 # static files served from the app directory at the site root
-ROOT_FILES = {"/app.js", "/storage.js", "/styles.css", "/sw.js", "/manifest.webmanifest", "/icon.svg", "/neutralino.js"}
+ROOT_FILES = {"/app.js", "/storage.js", "/styles.css", "/sw.js", "/manifest.webmanifest", "/icon.svg", "/neutralino.js", "/download.html"}
 
 
 def content_type(path: Path) -> str:

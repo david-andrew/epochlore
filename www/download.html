@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Download Epochlore</title>
+  <meta name="theme-color" content="#11151c" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #11151c; --panel: #1a212b; --line: #2c3644;
+      --text: #e6ebf2; --muted: #8a95a6; --accent: #5aa9ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex; align-items: center; justify-content: center; padding: 32px;
+    }
+    .card { width: 100%; max-width: 560px; }
+    h1 { font-size: 28px; margin: 0 0 4px; display: flex; align-items: center; gap: 12px; }
+    h1 img { width: 40px; height: 40px; }
+    p.sub { color: var(--muted); margin: 0 0 28px; }
+    .primary {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--accent);
+      background: linear-gradient(180deg, #2b6fc2, #245aa0); color: #fff;
+      font-size: 16px; font-weight: 600; text-decoration: none; cursor: pointer;
+    }
+    .primary:hover { filter: brightness(1.08); }
+    .primary .det { font-weight: 400; opacity: 0.85; font-size: 14px; }
+    .row { display: flex; align-items: center; gap: 10px; margin-top: 18px; color: var(--muted); font-size: 14px; }
+    select {
+      appearance: none; -webkit-appearance: none; flex: 1;
+      background: var(--panel); color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 10px 32px 10px 12px; font-size: 14px; cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%238a95a6' d='M4 6l4 4 4-4z'/></svg>");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    select option { background: var(--panel); color: var(--text); }
+    .ghost {
+      padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--panel); color: var(--text); text-decoration: none; font-size: 14px; white-space: nowrap;
+    }
+    .ghost:hover { border-color: var(--accent); }
+    .notes { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .notes a { color: var(--accent); }
+    .notes ul { margin: 8px 0 0; padding-left: 18px; }
+    .back { display: inline-block; margin-top: 24px; color: var(--accent); text-decoration: none; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1><img src="./icon.svg" alt="" />Download Epochlore</h1>
+    <p class="sub">The offline desktop app — full functionality, native file access, works without a server.</p>
+
+    <a id="primary" class="primary" href="#" download>
+      <span>Download</span>
+      <span class="det" id="primary-det"></span>
+    </a>
+
+    <div class="row">
+      <span>Different system?</span>
+      <select id="picker" aria-label="Choose a platform"></select>
+      <a id="picker-dl" class="ghost" href="#" download>Download</a>
+    </div>
+
+    <div class="notes">
+      Each download is a zip containing the app binary and <code>resources.neu</code> — keep them together in the same folder.
+      <ul>
+        <li><strong>Windows</strong>: needs the Microsoft Edge WebView2 runtime (preinstalled on Windows 10/11).</li>
+        <li><strong>Linux</strong>: needs <code>libwebkit2gtk</code>; mark the file executable (<code>chmod +x</code>) before running.</li>
+        <li><strong>macOS</strong>: pick Apple Silicon, Intel, or universal; you may need to allow it in Gatekeeper.</li>
+      </ul>
+      No release downloaded? Builds appear once a <code>v*</code> tag is pushed —
+      see <a id="rel-link" href="#" target="_blank" rel="noopener">all releases</a>.
+    </div>
+
+    <a class="back" href="./">&larr; back to the app</a>
+  </div>
+
+  <script>
+    const REPO = "david-andrew/epochlore";
+    const BASE = `https://github.com/${REPO}/releases/latest/download/`;
+    const RELEASES = `https://github.com/${REPO}/releases/latest`;
+    const ASSETS = [
+      { id: "win_x64", label: "Windows (x64)" },
+      { id: "mac_universal", label: "macOS (universal)" },
+      { id: "mac_arm64", label: "macOS (Apple Silicon)" },
+      { id: "mac_x64", label: "macOS (Intel)" },
+      { id: "linux_x64", label: "Linux (x64)" },
+      { id: "linux_arm64", label: "Linux (arm64)" },
+      { id: "linux_armhf", label: "Linux (armhf)" },
+    ];
+    const labelOf = (id) => (ASSETS.find((a) => a.id === id) || {}).label || id;
+    const urlOf = (id) => BASE + "epochlore-" + id + ".zip";
+
+    async function detect() {
+      const uad = navigator.userAgentData;
+      const ua = navigator.userAgent || "";
+      let os = "";
+      if (uad && uad.platform) os = uad.platform.toLowerCase();
+      else os = /win/i.test(ua) ? "windows" : /mac/i.test(ua) ? "macos" : /linux|x11|cros/i.test(ua) ? "linux" : "";
+      let arch = "";
+      if (uad && uad.getHighEntropyValues) {
+        try { arch = ((await uad.getHighEntropyValues(["architecture"])).architecture || "").toLowerCase(); } catch (e) {}
+      }
+      if (/win/.test(os)) return "win_x64";
+      if (/mac/.test(os)) return "mac_universal";
+      if (/linux/.test(os)) return arch.includes("arm") || /aarch64|arm64/i.test(ua) ? "linux_arm64" : "linux_x64";
+      return "linux_x64";
+    }
+
+    const $ = (s) => document.querySelector(s);
+    $("#rel-link").href = RELEASES;
+
+    const picker = $("#picker");
+    for (const a of ASSETS) {
+      const o = document.createElement("option");
+      o.value = a.id; o.textContent = a.label; picker.append(o);
+    }
+    const syncPicker = () => { $("#picker-dl").href = urlOf(picker.value); };
+    picker.addEventListener("change", syncPicker);
+
+    detect().then((id) => {
+      $("#primary").href = urlOf(id);
+      $("#primary-det").textContent = labelOf(id);
+      picker.value = id;
+      syncPicker();
+    });
+  </script>
+</body>
+</html>

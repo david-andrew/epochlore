@@ -16,7 +16,7 @@
  *   store.openFile/importFile/exportFile/pickSave (presence varies by backend)
  */
 
-const DESKTOP_DOWNLOAD_URL = "https://github.com/USER/REPO/releases/latest";
+const DESKTOP_DOWNLOAD_URL = "./download.html";
 
 /* ---- tiny IndexedDB key/value (file handles + browser-local document) ---- */
 const IDB_NAME = "timeline-store", IDB_STORE = "kv";

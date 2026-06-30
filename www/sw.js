@@ -2,9 +2,9 @@
  * Tries the network first (so an online user always gets the freshest deployed app and the
  * cache is kept up to date), and falls back to the cached app shell when offline. Live data
  * endpoints (/timeline, /mtime, /file/) are never cached. */
-const CACHE = "epochlore-v1";
+const CACHE = "epochlore-v2";
 const SHELL = [
-  "./", "./index.html", "./app.js", "./storage.js", "./styles.css",
+  "./", "./index.html", "./download.html", "./app.js", "./storage.js", "./styles.css",
   "./vendor/marked.min.js", "./vendor/purify.min.js",
   "./manifest.webmanifest", "./icon.svg",
 ];

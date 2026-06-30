@@ -3,7 +3,6 @@ name: build
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
@@ -12,21 +11,18 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   # Deploy the static web app (the shared www/ folder) to GitHub Pages.
   pages:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Point the "Desktop app" button at this repo's releases
-        run: sed -i "s#https://github.com/USER/REPO/releases/latest#https://github.com/${{ github.repository }}/releases/latest#" www/storage.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -34,9 +30,36 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v4
 
-  # On a version tag, build the Neutralino desktop binaries and attach them to a Release.
+  # Decide whether a desktop release is needed: the app version lives in
+  # neutralino.config.json. Release when that version has no release yet,
+  # or whenever the workflow is triggered manually.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: v
+        run: |
+          V=$(jq -r .version neutralino.config.json)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          elif git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "Release v$V already exists; nothing to publish."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Build the Neutralino desktop binaries and publish them to a Release tagged
+  # v<version>, pinned to this commit (so a manual run always ships latest main).
   desktop:
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    if: needs.check.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,10 +69,25 @@ jobs:
       - run: npm install -g @neutralinojs/neu
       - run: neu update
       - run: neu build
-      - name: Package desktop bundle
+      - name: Package per-platform bundles
         run: |
           cd dist/epochlore
-          zip -r "../../epochlore-desktop-${GITHUB_REF_NAME}.zip" .
+          pkg() { local name="$1"; shift; zip -j "../../epochlore-${name}.zip" resources.neu "$@"; }
+          pkg linux_x64     epochlore-linux_x64
+          pkg linux_arm64   epochlore-linux_arm64
+          pkg linux_armhf   epochlore-linux_armhf
+          pkg mac_x64       epochlore-mac_x64
+          pkg mac_arm64     epochlore-mac_arm64
+          pkg mac_universal epochlore-mac_universal
+          pkg win_x64       epochlore-win_x64.exe
+      - name: Tag this commit as v${{ needs.check.outputs.version }}
+        run: |
+          git tag -f "v${{ needs.check.outputs.version }}"
+          git push -f origin "v${{ needs.check.outputs.version }}"
       - uses: softprops/action-gh-release@v2
         with:
-          files: epochlore-desktop-*.zip
+          tag_name: v${{ needs.check.outputs.version }}
+          name: Epochlore v${{ needs.check.outputs.version }}
+          # stable, un-versioned asset names so /releases/latest/download/<name> always resolves
+          files: epochlore-*.zip
+          fail_on_unmatched_files: true
