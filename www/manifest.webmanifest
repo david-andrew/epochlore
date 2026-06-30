@@ -1,0 +1,13 @@
+{
+  "name": "Epochlore",
+  "short_name": "Epochlore",
+  "description": "Plan and organize writing timelines as markdown.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#11151c",
+  "theme_color": "#11151c",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Epochlore</title>
+  <meta name="theme-color" content="#11151c" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <svg id="stage" xmlns="http://www.w3.org/2000/svg">
+      <defs id="defs"></defs>
+    </svg>
+    <div id="overlay"></div>
+    <div id="ghost"></div>
+    <div id="gutter"></div>
+  </div>
+
+  <div id="toolbar">
+    <span id="doc-title">epochlore</span>
+    <button id="undo-btn" class="tb-btn" title="Undo (Ctrl+Z)" disabled>&#8630;</button>
+    <button id="redo-btn" class="tb-btn" title="Redo (Ctrl+Shift+Z)" disabled>&#8631;</button>
+    <button id="arrange-btn" class="tb-btn" title="Auto-arrange text boxes">&#9638;</button>
+    <button id="fit-btn" class="tb-btn" title="Reset / fit view">&#9974;</button>
+    <button id="legend-btn" class="tb-btn" title="Span colors">&#9650;</button>
+    <span id="search-wrap">
+      <input id="search-input" type="search" placeholder="search&#8230;" autocomplete="off" />
+      <div id="search-results"></div>
+    </span>
+    <span id="status">loading...</span>
+    <span id="storage-actions"></span>
+    <span class="spacer"></span>
+    <span class="hint">drag empty space to pan &middot; scroll to zoom &middot; click a line for an event &middot; drag a line for a span</span>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script src="./vendor/marked.min.js"></script>
+  <script src="./vendor/purify.min.js"></script>
+  <script src="./neutralino.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

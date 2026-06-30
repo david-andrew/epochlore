@@ -1,0 +1,10 @@
+bin/
+dist/
+.tmp/
+__pycache__/
+*.pyc
+.DS_Store
+
+
+# any lore files
+*.md
