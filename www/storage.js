@@ -47,15 +47,6 @@ async function idbSet(key, val) {
 }
 const baseName = (p) => (p || "timeline").split(/[\\/]/).pop();
 
-/* ---- desktop diagnostics: record bridge + dialog behaviour to a file we can read ---- */
-const DIAG = [];
-function neuLog(msg) {
-  DIAG.push(new Date().toISOString().slice(11, 23) + " " + msg);
-  try { Neutralino.filesystem.writeFile((window.NL_PATH || ".") + "/nl-diag.txt", DIAG.join("\n")); } catch (e) {}
-}
-const withTimeout = (p, ms, label) =>
-  Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error((label || "call") + " timed out after " + ms + "ms")), ms))]);
-
 // Neutralino's native os.showOpenDialog/showSaveDialog hang on some Linux (Wayland/GTK) setups,
 // so on Linux we drive zenity (then yad) via execCommand instead — os.* calls themselves work.
 const shq = (s) => "'" + String(s).replace(/'/g, "'\\''") + "'";
@@ -103,8 +94,7 @@ async function linuxFileDialog({ save, suggested }) {
     : `yad --file --title="Open timeline"`);
   for (const cmd of [z, y]) {
     let r;
-    try { r = await spawnDialog(cmd); } catch (e) { neuLog("spawnDialog threw: " + (e && e.message ? e.message : e)); continue; }
-    neuLog("dialog exit=" + r.exitCode + " out=" + JSON.stringify((r.stdOut || "").trim()));
+    try { r = await spawnDialog(cmd); } catch (e) { continue; }
     if (r.exitCode === 0) { const p = (r.stdOut || "").trim(); return p || null; }
     if (r.exitCode === 127) continue; // helper not installed -> try the next one
     return null; // user cancelled
@@ -155,16 +145,11 @@ async function detectNeutralino() {
   if (!inNeu || !window.Neutralino) return null;
   try {
     await Neutralino.init();
-    neuLog("init done; NL_OS=" + window.NL_OS + " NL_PORT=" + window.NL_PORT + " NL_MODE=" + window.NL_MODE + " NL_VERSION=" + window.NL_VERSION);
     // kill any open native dialog so it doesn't linger after the window is gone
     Neutralino.events.on("windowClose", async () => {
       await killDialog();
       Neutralino.app.exit();
     });
-    // fire-and-forget bridge probe (does not block startup); records to nl-diag.txt
-    withTimeout(Neutralino.os.getEnv("HOME"), 5000, "getEnv")
-      .then((h) => neuLog("bridge OK; getEnv HOME=" + h))
-      .catch((e) => neuLog("bridge PROBE FAILED: " + (e && e.message ? e.message : e)));
     let path = null;
     try { path = await Neutralino.storage.getData("timelinePath"); } catch (e) { path = null; }
     return makeNeutralinoBackend(path);

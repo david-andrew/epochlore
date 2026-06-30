@@ -8,3 +8,4 @@ __pycache__/
 
 # any lore files
 *.md
+!README.md
