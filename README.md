@@ -35,7 +35,7 @@ A long period of preparation and uncertainty.
 - `color=` accepts a name or hex (`green`, `0xe6a15a`); omit it for a random color.
 - Heading body text is the event/span note and is rendered as Markdown.
 
-See [`timeline.md`](timeline.md) for a fuller sample.
+See [`sample.md`](sample.md) for a fuller sample.
 
 ## Running locally (two-way file sync)
 
